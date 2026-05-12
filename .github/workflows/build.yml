@@ -1,0 +1,37 @@
+name: Build GalPatch
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Setup vcpkg
+      uses: lukka/run-vcpkg@v11
+      with:
+        vcpkgDirectory: '${{ github.workspace }}/vcpkg'
+        vcpkgGitCommitId: 'master'
+
+    - name: Build
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: msbuild /m /p:Configuration=Release /p:Platform=Win32 GalPatch.sln
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: version-dll
+        path: |
+          Release/version.dll
+          */Release/version.dll
+          Release/*/version.dll
